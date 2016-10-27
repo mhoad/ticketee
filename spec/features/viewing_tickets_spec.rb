@@ -1,16 +1,19 @@
 require 'rails_helper'
 
 RSpec.feature 'Users can view tickets' do
+  let(:author) { FactoryGirl.create(:user) }
   before do
     sublime = FactoryGirl.create(:project, name: 'Sublime Text 3')
     FactoryGirl.create(:ticket, project: sublime,
                                 name: 'Make it shiny',
-                                description: 'Gradients! Starbursts! Oh My!')
+                                description: 'Gradients! Starbursts! Oh My!',
+                                author: author)
 
     ie = FactoryGirl.create(:project, name: 'Internet Explorer')
     FactoryGirl.create(:ticket, project: ie,
                                 name: 'Standards compliance',
-                                description: 'Is not a joke')
+                                description: 'Is not a joke',
+                                author: author)
 
     visit '/'
   end
