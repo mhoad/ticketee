@@ -36,6 +36,7 @@ RSpec.describe Admin::ApplicationController, type: :controller do
       get :index
 
       expect(response.status).to eq 200
+      expect(response).to render_template(:index)
     end
   end
 end
