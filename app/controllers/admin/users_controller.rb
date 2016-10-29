@@ -1,5 +1,6 @@
 class Admin::UsersController < Admin::ApplicationController
   before_action :set_user, only: [:show, :edit, :update, :archive]
+  before_action :set_projects, only: [:new, :create, :edit, :update]
 
   def index
     @users = User.excluding_archived.order(:email)
@@ -30,12 +31,24 @@ class Admin::UsersController < Admin::ApplicationController
   def update
     params[:user].delete(:password) if params[:user][:password].blank?
 
-    if @user.update(user_params)
-      flash[:notice] = 'User has been updated.'
-      redirect_to admin_users_path
-    else
-      flash[:alert] = 'User has not been updated.'
-      render 'edit'
+    User.transaction do
+      @user.roles.clear
+      role_data = params.fetch(:roles, [])
+
+      role_data.each do |project_id, role_name|
+        if role_name.present?
+          @user.roles.build(project_id: project_id, role: role_name)
+        end
+      end
+
+      if @user.update(user_params)
+        flash[:notice] = 'User has been updated.'
+        redirect_to admin_users_path
+      else
+        flash[:alert] = 'User has not been updated.'
+        render 'edit'
+        raise ActiveRecord::Rollback
+      end
     end
   end
 
@@ -50,6 +63,10 @@ class Admin::UsersController < Admin::ApplicationController
   end
 
   private
+
+  def set_projects
+    @projects = Project.order(:name)
+  end
 
   def user_params
     params.require(:user).permit(:email, :password, :admin)
